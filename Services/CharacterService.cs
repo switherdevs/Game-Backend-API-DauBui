@@ -12,12 +12,25 @@ public sealed class CharacterService(AppDbContext db)
         var character = new Character
         {
             Name = request.Name,
-            Class = request.Class,
+            Class = "Adventurer",
             AccountId = accountId
         };
         db.Characters.Add(character);
         await db.SaveChangesAsync();
         return ToResponse(character);
+    }
+
+    public async Task<IReadOnlyList<CharacterResponse>> GetAllAsync(int accountId) =>
+        await db.Characters
+            .Where(character => character.AccountId == accountId)
+            .OrderBy(character => character.Id)
+            .Select(character => new CharacterResponse(character.Id, character.Name, character.Class, character.Level, character.Hp, character.AccountId))
+            .ToListAsync();
+
+    public async Task<CharacterResponse?> GetByIdAsync(int accountId, int characterId)
+    {
+        var character = await db.Characters.SingleOrDefaultAsync(item => item.Id == characterId && item.AccountId == accountId);
+        return character is null ? null : ToResponse(character);
     }
 
     public async Task<CharacterResponse?> UpdateAsync(int accountId, int characterId, UpdateCharacterRequest request)

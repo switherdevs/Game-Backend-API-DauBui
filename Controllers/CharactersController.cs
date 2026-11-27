@@ -11,6 +11,28 @@ namespace GameApi.Controllers;
 [Route("api/characters")]
 public sealed class CharactersController(CharacterService characterService) : ControllerBase
 {
+    [HttpGet]
+    [ProducesResponseType<IReadOnlyList<CharacterResponse>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAll()
+    {
+        if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var accountId))
+            return Unauthorized();
+
+        return Ok(await characterService.GetAllAsync(accountId));
+    }
+
+    [HttpGet("{id:int}")]
+    [ProducesResponseType<CharacterResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetById(int id)
+    {
+        if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var accountId))
+            return Unauthorized();
+
+        var character = await characterService.GetByIdAsync(accountId, id);
+        return character is null ? NotFound() : Ok(character);
+    }
+
     [HttpPost]
     [ProducesResponseType<CharacterResponse>(StatusCodes.Status201Created)]
     public async Task<IActionResult> Create(CreateCharacterRequest request)
