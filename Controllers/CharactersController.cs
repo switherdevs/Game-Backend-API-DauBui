@@ -44,6 +44,20 @@ public sealed class CharactersController(CharacterService characterService) : Co
         return StatusCode(StatusCodes.Status201Created, character);
     }
 
+    [HttpDelete("{id:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Delete(int id)
+    {
+        if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var accountId))
+            return Unauthorized();
+
+        return await characterService.DeleteAsync(accountId, id)
+            ? NoContent()
+            : NotFound(new { message = "Không tìm thấy nhân vật của bạn" });
+    }
+
     [HttpPut("{id:int}")]
     [ProducesResponseType<CharacterResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

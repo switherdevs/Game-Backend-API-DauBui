@@ -12,7 +12,7 @@ public sealed class CharacterService(AppDbContext db)
         var character = new Character
         {
             Name = request.Name,
-            Class = "Adventurer",
+            Class = request.Class,
             AccountId = accountId
         };
         db.Characters.Add(character);
@@ -31,6 +31,17 @@ public sealed class CharacterService(AppDbContext db)
     {
         var character = await db.Characters.SingleOrDefaultAsync(item => item.Id == characterId && item.AccountId == accountId);
         return character is null ? null : ToResponse(character);
+    }
+
+    public async Task<bool> DeleteAsync(int accountId, int characterId)
+    {
+        var character = await db.Characters.FindAsync(characterId);
+        if (character is null || character.AccountId != accountId)
+            return false;
+
+        db.Characters.Remove(character);
+        await db.SaveChangesAsync();
+        return true;
     }
 
     public async Task<CharacterResponse?> UpdateAsync(int accountId, int characterId, UpdateCharacterRequest request)

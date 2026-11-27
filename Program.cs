@@ -9,6 +9,10 @@ using Microsoft.OpenApi.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+builder.Services.AddCors(options => options.AddPolicy("fe", policy =>
+    policy.WithOrigins("http://localhost:3000")
+        .WithMethods("GET", "POST", "PUT", "DELETE")
+        .AllowAnyHeader()));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -57,6 +61,7 @@ builder.Services.AddAuthorization();
 var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
+app.UseCors("fe");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
