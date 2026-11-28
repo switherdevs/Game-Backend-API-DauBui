@@ -76,3 +76,27 @@ Các file mã nguồn:
 - **Frontend Tests:** `npm test` (`D:\AI\feGame`) đạt 4/4 bài kiểm thử passed.
 - **Database:** Giữ nguyên 100% schema, không tạo migration mới, không xóa hay ảnh hưởng dữ liệu tài khoản và nhân vật hiện có.
 - **Tính tương thích:** 100% tương thích với Frontend Next.js.
+
+---
+
+## C?P NH?T 2026-11-28: CHUY?N JWT SANG HTTPONLY COOKIE
+
+### Thay d?i
+| Th�nh ph?n | Thay d?i |
+|---|---|
+| Program.cs | Th�m AllowCredentials() v�o CORS; OnMessageReceived d?c cookie token cho JwtBearer |
+| Controllers/AuthController.cs | Login d�nh k�m cookie token (HttpOnly, SameSite=Lax, 1 ng�y); th�m POST /api/auth/logout; th�m GET /api/auth/me |
+| lib/api.js (Frontend) | credentials: include cho m?i fetch; saveLogin kh�ng luu token v�o localStorage; logout g?i /api/auth/logout |
+| app/tai-khoan/page.js (Frontend) | D�ng /api/auth/me thay getToken() d? ki?m tra phi�n |
+| tests/api.test.js (Frontend) | Th�m assert credentials: include |
+
+### K?t qu? ki?m tra th?c t?
+- Login: Set-Cookie token httponly samesite=lax - PASS
+- Token KHONG trong localStorage - PASS
+- HttpOnly cookie khong doc duoc qua JS (chong XSS) - PASS
+- /api/auth/me xac thuc qua cookie - PASS
+- CRUD nhan vat qua cookie - PASS
+- CORS Access-Control-Allow-Credentials: true - PASS
+- Dang xuat xoa cookie (expires 1970) - PASS
+- /tai-khoan sau logout redirect /dang-nhap - PASS
+- npm test 4/4 pass - PASS

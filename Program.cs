@@ -12,7 +12,8 @@ builder.Services.AddControllers();
 builder.Services.AddCors(options => options.AddPolicy("fe", policy =>
     policy.WithOrigins("http://localhost:3000")
         .WithMethods("GET", "POST", "PUT", "DELETE")
-        .AllowAnyHeader()));
+        .AllowAnyHeader()
+        .AllowCredentials()));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -54,6 +55,17 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero
+    };
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            if (context.Request.Cookies.TryGetValue("token", out var token) && !string.IsNullOrEmpty(token))
+            {
+                context.Token = token;
+            }
+            return Task.CompletedTask;
+        }
     };
 });
 builder.Services.AddAuthorization();

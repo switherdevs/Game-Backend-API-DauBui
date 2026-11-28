@@ -18,6 +18,17 @@ try {
         throw 'JWT signing key must be at least 32 bytes.'
     }
 
+    # Free port 5254 if an old GameApi instance is still lingering
+    $oldConnections = Get-NetTCPConnection -LocalPort 5254 -ErrorAction SilentlyContinue
+    foreach ($conn in $oldConnections) {
+        $p = Get-Process -Id $conn.OwningProcess -ErrorAction SilentlyContinue
+        if ($p -and $p.ProcessName -match "GameApi|dotnet") {
+            Write-Host "Closing previous backend process (PID: $($p.Id))..."
+            Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
+            Start-Sleep -Milliseconds 500
+        }
+    }
+
     dotnet run --project $PSScriptRoot\GameApi.csproj
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 }
