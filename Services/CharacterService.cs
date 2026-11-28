@@ -11,8 +11,8 @@ public sealed class CharacterService(AppDbContext db)
     {
         var character = new Character
         {
-            Name = request.Name,
-            Class = request.Class,
+            Name = request.Name.Trim(),
+            Class = request.Class.Trim(),
             AccountId = accountId
         };
         db.Characters.Add(character);
@@ -50,8 +50,8 @@ public sealed class CharacterService(AppDbContext db)
         if (character is null)
             return null;
 
-        character.Name = request.Name;
-        character.Class = request.Class;
+        character.Name = request.Name.Trim();
+        character.Class = request.Class.Trim();
         character.Level = request.Level!.Value;
         character.Hp = request.Hp!.Value;
         await db.SaveChangesAsync();

@@ -59,6 +59,17 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
+
+app.UseExceptionHandler(exceptionApp =>
+{
+    exceptionApp.Run(async context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        context.Response.ContentType = "application/json; charset=utf-8";
+        await context.Response.WriteAsJsonAsync(new { message = "Đã xảy ra lỗi trên máy chủ. Vui lòng thử lại sau." });
+    });
+});
+
 app.UseSwagger();
 app.UseSwaggerUI();
 app.UseCors("fe");

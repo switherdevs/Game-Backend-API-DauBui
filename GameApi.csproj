@@ -15,4 +15,10 @@
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="backup\**" />
+    <Content Remove="backup\**" />
+    <EmbeddedResource Remove="backup\**" />
+    <None Remove="backup\**" />
+  </ItemGroup>
 </Project>

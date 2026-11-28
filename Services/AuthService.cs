@@ -16,10 +16,11 @@ public sealed class AuthService(AppDbContext db, IConfiguration configuration)
 
     public async Task<AccountResponse?> RegisterAsync(RegisterRequest request)
     {
-        if (await db.Accounts.AnyAsync(account => account.Username == request.Username))
+        var username = request.Username.Trim();
+        if (await db.Accounts.AnyAsync(account => account.Username == username))
             return null;
 
-        var account = new Account { Username = request.Username, PasswordHash = string.Empty };
+        var account = new Account { Username = username, PasswordHash = string.Empty };
         account.PasswordHash = passwordHasher.HashPassword(account, request.Password);
         db.Accounts.Add(account);
         await db.SaveChangesAsync();
@@ -29,15 +30,21 @@ public sealed class AuthService(AppDbContext db, IConfiguration configuration)
 
     public async Task<LoginResponse?> LoginAsync(LoginRequest request)
     {
-        var account = await db.Accounts.SingleOrDefaultAsync(item => item.Username == request.Username);
+        var username = request.Username.Trim();
+        var account = await db.Accounts.SingleOrDefaultAsync(item => item.Username == username);
         if (account is null || passwordHasher.VerifyHashedPassword(account, account.PasswordHash, request.Password) == PasswordVerificationResult.Failed)
             return null;
 
         var keyText = configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT signing key is not configured.");
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyText));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, account.Id.ToString()),
+            new Claim(ClaimTypes.Name, account.Username)
+        };
         var token = new JwtSecurityToken(
-            claims: [new Claim(ClaimTypes.NameIdentifier, account.Id.ToString()), new Claim(ClaimTypes.Name, account.Username)],
+            claims: claims,
             expires: DateTime.UtcNow.AddDays(1),
             signingCredentials: credentials);
 
